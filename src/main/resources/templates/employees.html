@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Employee Manager</title>
+    <link rel="stylesheet" th:href="@{/css/app.css}">
+</head>
+<body>
+<main class="container">
+    <header class="page-header">
+        <div>
+            <h1>Employee Manager</h1>
+            <p class="muted">Manage your employee directory.</p>
+        </div>
+    </header>
+
+    <div class="alert success" role="status" th:if="${successMessage}"
+         th:text="${successMessage}"></div>
+    <div class="alert error" role="alert" th:if="${errorMessage}"
+         th:text="${errorMessage}"></div>
+
+    <section class="panel">
+        <h2>Add employee</h2>
+        <form th:action="@{/employees}" th:object="${employee}" method="post"
+              class="form-grid">
+            <label>
+                Full name
+                <input type="text" th:field="*{fullName}" required>
+                <span class="field-error" th:errors="*{fullName}"></span>
+            </label>
+            <label>
+                Email
+                <input type="email" th:field="*{email}" required>
+                <span class="field-error" th:errors="*{email}"></span>
+            </label>
+            <label>
+                Job title
+                <input type="text" th:field="*{jobTitle}" required>
+                <span class="field-error" th:errors="*{jobTitle}"></span>
+            </label>
+            <label>
+                Salary
+                <input type="number" th:field="*{salary}" min="0.01" step="0.01" required>
+                <span class="field-error" th:errors="*{salary}"></span>
+            </label>
+            <label>
+                Phone
+                <input type="tel" th:field="*{phone}" required>
+                <span class="field-error" th:errors="*{phone}"></span>
+            </label>
+            <div class="form-actions">
+                <button type="submit">Add employee</button>
+            </div>
+        </form>
+    </section>
+
+    <section class="panel">
+        <div class="section-header">
+            <h2>Employees</h2>
+            <form th:action="@{/employees}" method="get" class="search-form">
+                <label class="visually-hidden" for="keyword">Search by name</label>
+                <input id="keyword" type="search" name="keyword"
+                       placeholder="Search by name" th:value="${param.keyword}">
+                <button type="submit" class="secondary">Search</button>
+                <a class="button-link secondary" th:href="@{/employees}">Clear</a>
+            </form>
+        </div>
+
+        <div class="table-scroll">
+            <table>
+                <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Email</th>
+                    <th>Job title</th>
+                    <th>Salary</th>
+                    <th>Phone</th>
+                    <th>Actions</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="employee : ${employees}">
+                    <td th:text="${employee.fullName}"></td>
+                    <td th:text="${employee.email}"></td>
+                    <td th:text="${employee.jobTitle}"></td>
+                    <td th:text="${#numbers.formatDecimal(employee.salary, 1, 2)}"></td>
+                    <td th:text="${employee.phone}"></td>
+                    <td class="actions">
+                        <a class="button-link secondary"
+                           th:href="@{/employees/{id}/edit(id=${employee.id})}">Edit</a>
+                        <form th:action="@{/employees/{id}/delete(id=${employee.id})}"
+                              method="post"
+                              onsubmit="return confirm('Delete this employee?');">
+                            <button type="submit" class="danger">Delete</button>
+                        </form>
+                    </td>
+                </tr>
+                <tr th:if="${#lists.isEmpty(employees)}">
+                    <td colspan="6" class="empty-state">No employees found.</td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+    </section>
+</main>
+</body>
+</html>
