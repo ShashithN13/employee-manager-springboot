@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Edit employee | Employee Manager</title>
+    <link rel="stylesheet" th:href="@{/css/app.css}">
+</head>
+<body>
+<main class="container narrow">
+    <header class="page-header">
+        <div>
+            <h1>Edit employee</h1>
+            <p class="muted">Update the employee details below.</p>
+        </div>
+    </header>
+
+    <section class="panel">
+        <form th:action="@{/employees/{id}/update(id=${employee.id})}"
+              th:object="${employee}" method="post" class="form-grid">
+            <label>
+                Full name
+                <input type="text" th:field="*{fullName}" required>
+                <span class="field-error" th:errors="*{fullName}"></span>
+            </label>
+            <label>
+                Email
+                <input type="email" th:field="*{email}" required>
+                <span class="field-error" th:errors="*{email}"></span>
+            </label>
+            <label>
+                Job title
+                <input type="text" th:field="*{jobTitle}" required>
+                <span class="field-error" th:errors="*{jobTitle}"></span>
+            </label>
+            <label>
+                Salary
+                <input type="number" th:field="*{salary}" min="0.01" step="0.01" required>
+                <span class="field-error" th:errors="*{salary}"></span>
+            </label>
+            <label>
+                Phone
+                <input type="tel" th:field="*{phone}" required>
+                <span class="field-error" th:errors="*{phone}"></span>
+            </label>
+            <div class="form-actions">
+                <button type="submit">Save changes</button>
+                <a class="button-link secondary" th:href="@{/employees}">Cancel</a>
+            </div>
+        </form>
+    </section>
+</main>
+</body>
+</html>

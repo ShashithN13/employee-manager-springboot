@@ -1,3 +1,4 @@
+
 package com.example.employee_manager.service;
 
 import com.example.employee_manager.model.Employee;
@@ -16,34 +17,33 @@ public class EmployeeService {
         this.employeeRepository = employeeRepository;
     }
 
-    // Retrieve all employees
     public List<Employee> getAllEmployees() {
         return employeeRepository.findAll();
     }
 
-    // Retrieve an employee by ID
     public Optional<Employee> getEmployeeById(Long id) {
         return employeeRepository.findById(id);
     }
 
-    // Add or update an employee
+    public boolean emailExists(String email) {
+        return employeeRepository.existsByEmail(email);
+    }
+
+    public boolean emailExistsForOtherEmployee(
+            String email, Long id) {
+        return employeeRepository.existsByEmailAndIdNot(email, id);
+    }
+
     public Employee saveEmployee(Employee employee) {
         return employeeRepository.save(employee);
     }
 
-    // Delete an employee
     public void deleteEmployee(Long id) {
         employeeRepository.deleteById(id);
     }
 
-    // Check whether an email already exists
-    public boolean existsByEmail(String email) {
-        return employeeRepository.existsByEmail(email);
-    }
-
-    // Find an employee by email
-    public Optional<Employee> getEmployeeByEmail(String email) {
-        return employeeRepository.findByEmail(email);
+    public List<Employee> searchEmployees(String keyword) {
+        return employeeRepository
+                .findByFullNameContainingIgnoreCase(keyword);
     }
 }
-

@@ -1,13 +1,19 @@
+
 package com.example.employee_manager.repository;
 
 import com.example.employee_manager.model.Employee;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.stereotype.Repository;
 
-import java.util.Optional;
-
-public interface EmployeeRepository extends JpaRepository<Employee, Long> {
-
-    Optional<Employee> findByEmail(String email);
+@Repository
+public interface EmployeeRepository
+        extends JpaRepository<Employee, Long> {
 
     boolean existsByEmail(String email);
+
+    boolean existsByEmailAndIdNot(String email, Long id);
+
+    // Optional: search employees by name
+    java.util.List<Employee>
+        findByFullNameContainingIgnoreCase(String keyword);
 }

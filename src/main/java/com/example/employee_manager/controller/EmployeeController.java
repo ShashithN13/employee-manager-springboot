@@ -1,7 +1,9 @@
+
 package com.example.employee_manager.controller;
 
 import com.example.employee_manager.model.Employee;
 import com.example.employee_manager.service.EmployeeService;
+
 import jakarta.validation.Valid;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -10,7 +12,6 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 @Controller
-@RequestMapping("/employees")
 public class EmployeeController {
 
     private final EmployeeService employeeService;
@@ -19,60 +20,114 @@ public class EmployeeController {
         this.employeeService = employeeService;
     }
 
-    // READ: Display all employees
-    @GetMapping
-    public String listEmployees(Model model) {
-        model.addAttribute(
-            "employees",
-            employeeService.getAllEmployees()
-        );
-        return "employees/list";
-    }
+    // Display the employee form and employee table
+    @GetMapping({"/", "/employees"})
+    public String listEmployees(
+            @RequestParam(required = false) String keyword,
+            Model model) {
 
-    // CREATE: Display the add employee form
-    @GetMapping("/new")
-    public String showCreateForm(Model model) {
-        model.addAttribute("employee", new Employee());
-        return "employees/form";
-    }
-
-    // CREATE / UPDATE: Save the submitted employee
-    @PostMapping("/save")
-    public String saveEmployee(
-            @Valid @ModelAttribute("employee") Employee employee,
-            BindingResult result) {
-
-        if (result.hasErrors()) {
-            return "employees/form";
+        if (keyword != null && !keyword.isBlank()) {
+            model.addAttribute("employees",
+                    employeeService.searchEmployees(keyword));
+        } else {
+            model.addAttribute("employees",
+                    employeeService.getAllEmployees());
         }
 
-        employeeService.saveEmployee(employee);
-        return "redirect:/employees";
+        if (!model.containsAttribute("employee")) {
+            model.addAttribute("employee", new Employee());
+        }
+
+        return "employees";
     }
 
-    // UPDATE: Display the edit employee form
-    @GetMapping("/edit/{id}")
-    public String showEditForm(
-            @PathVariable Long id,
+    // Create a new employee
+    @PostMapping("/employees")
+    public String addEmployee(
+            @Valid @ModelAttribute("employee") Employee employee,
+            BindingResult result,
             Model model,
             RedirectAttributes redirectAttributes) {
 
-        return employeeService.getEmployeeById(id)
-            .map(employee -> {
-                model.addAttribute("employee", employee);
-                return "employees/form";
-            })
-            .orElseGet(() -> {
-                redirectAttributes.addFlashAttribute(
-                    "error",
-                    "Employee not found"
-                );
-                return "redirect:/employees";
-            });
+        if (employeeService.emailExists(employee.getEmail())) {
+            result.rejectValue(
+                    "email", "duplicate",
+                    "This email is already registered");
+        }
+
+        if (result.hasErrors()) {
+            model.addAttribute("employees",
+                    employeeService.getAllEmployees());
+            return "employees";
+        }
+
+        employeeService.saveEmployee(employee);
+
+        redirectAttributes.addFlashAttribute(
+                "successMessage", "Employee saved successfully!");
+
+        return "redirect:/employees";
     }
 
-    // DELETE: Remove an employee
-    @PostMapping("/delete/{id}")
+    // Show the edit form
+    @GetMapping("/employees/{id}/edit")
+    public String editEmployee(
+            @PathVariable Long id, Model model,
+            RedirectAttributes redirectAttributes) {
+
+        return employeeService.getEmployeeById(id)
+                .map(employee -> {
+                    model.addAttribute("employee", employee);
+                    return "edit-employee";
+                })
+                .orElseGet(() -> {
+                    redirectAttributes.addFlashAttribute(
+                            "errorMessage", "Employee not found");
+                    return "redirect:/employees";
+                });
+    }
+
+    // Update an existing employee
+    @PostMapping("/employees/{id}/update")
+    public String updateEmployee(
+            @PathVariable Long id,
+            @Valid @ModelAttribute("employee") Employee employee,
+            BindingResult result,
+            Model model,
+            RedirectAttributes redirectAttributes) {
+
+        var existing = employeeService.getEmployeeById(id);
+
+        if (existing.isEmpty()) {
+            redirectAttributes.addFlashAttribute(
+                    "errorMessage", "Employee not found");
+            return "redirect:/employees";
+        }
+
+        if (employeeService.emailExistsForOtherEmployee(
+                employee.getEmail(), id)) {
+            result.rejectValue(
+                    "email", "duplicate",
+                    "This email is already registered");
+        }
+
+        if (result.hasErrors()) {
+            employee.setId(id);
+            model.addAttribute("employee", employee);
+            return "edit-employee";
+        }
+
+        employee.setId(id);
+        employeeService.saveEmployee(employee);
+
+        redirectAttributes.addFlashAttribute(
+                "successMessage", "Employee updated successfully!");
+
+        return "redirect:/employees";
+    }
+
+    // Delete an employee
+    @PostMapping("/employees/{id}/delete")
     public String deleteEmployee(
             @PathVariable Long id,
             RedirectAttributes redirectAttributes) {
@@ -80,17 +135,12 @@ public class EmployeeController {
         if (employeeService.getEmployeeById(id).isPresent()) {
             employeeService.deleteEmployee(id);
             redirectAttributes.addFlashAttribute(
-                "success",
-                "Employee deleted successfully"
-            );
+                    "successMessage", "Employee deleted successfully!");
         } else {
             redirectAttributes.addFlashAttribute(
-                "error",
-                "Employee not found"
-            );
+                    "errorMessage", "Employee not found");
         }
 
         return "redirect:/employees";
     }
 }
-
